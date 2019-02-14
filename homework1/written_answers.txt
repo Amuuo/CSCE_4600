@@ -1,0 +1,23 @@
+1.
+	a. fork()    - spawns a copy of the calling process
+	b. exit()    - kills process and sends exit code to parent process
+	c. getpid()  - return the process id of the calling program
+	d. getppid() - returns the process id of the calling program's parent process
+	e. wait()    - waits for a status change in the calling program's child process, default
+			waits for child process to terminate
+	f. execl()   - replaces the current program with another process
+
+2. 
+	Speed of Light = 299,792,458 m/s
+   	75% Speed of Light = 299,792,458 * 0.75 = 224,844,343 m/s
+
+	4GHz = 4,000,000,000 cycles per second	
+	distance for one signal per 4GHz cycle = (75% Speed of Light / 4,000,000,000)/2 = 28mm
+
+	12GHz = 12,000,000,000 cycles per second
+	distance for one signal per 12GHz cycle = (75% Speed of Light / 12,000,000,000)/2 = 9mm
+
+3.
+	Observation: Larger data chunks with read/write is much much faster than byte-by-byte
+	I think modern computer architecture is capable of holder large chunks of data in low-level
+	caches, so the less data requested from the hard disk, the faster the transfers.

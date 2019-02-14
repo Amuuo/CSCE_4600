@@ -1,0 +1,1 @@
+run ./generate_stats.sh
