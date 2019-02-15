@@ -29,10 +29,10 @@ using namespace std;
 sem_t* semaphore;
 int shared_addr;
 fstream F;
-char pid_name[20];
+string pid_name;
 void increment_counter(int*);
 void print_header();
-string colors[3] = { "[32m", "[33m", "[34m" };
+string colors[3] = { "[41m", "[42m", "[43m" };
 
 //====================================
 //              M A I N
@@ -75,9 +75,7 @@ int main() {
   // create 3 child processes with fork() and start incrementing file
   for (int i = 0; i < 3; ++i) {
     if ((pid = fork()) == 0) {
-      strcat(pid_name, colors[i].c_str());
-      strcat(pid_name, to_string(getpid()).c_str());
-      strcat(pid_name, "[0m");      
+      pid_name = colors[i] + "PID: " + to_string(getpid()) + "[0m";
       increment_counter(N);
     }
   }
@@ -85,6 +83,7 @@ int main() {
   // if parent_process, wait for children to exit, then unlink shared memory
   if (pid != 0) {
     while (wait(&status) > 0);
+    cout << endl;
     shm_unlink("shared_test");
     sem_close(semaphore);
     sem_unlink("semaphore_test");
@@ -108,7 +107,7 @@ void increment_counter(int* N) {
     F.open("/tmp/fileF", ios::in);
     F >> *N;
     F.close();
-    cout << "\tPID: " << pid_name << ", N: " << *N << endl;
+    cout << "\t\t" << pid_name << ", N: " << *N << endl;
     ++(*N);
     F.open("/tmp/fileF", ios::out | ios::trunc);
     F << *N;
@@ -130,5 +129,5 @@ void print_header()
     "       [37;42m |        Computer Sceince and Engineering        | [0m\n"
     "       [37;42m |          CSCE 4600 - Operating Systems         | [0m\n"
     "       [37;42m | Adam Williams arw0174 adamwilliams2@my.unt.edu | [0m\n"
-    "       [37;42m +------------------------------------------------+ [0m\n");
+    "       [37;42m +------------------------------------------------+ [0m\n\n\n");
 }
