@@ -1,60 +1,126 @@
+/*
+*============================================================================
+* Name        : Homework #2 : Question #2
+* Author      : Adam Williams
+* Version     : 1.0
+* Copyright   : 2018
+* Description : Program initializes 3 processes via fork(), and utilizes a 
+                semaphore to synchronize read/writes to file F from 1 to 500
+*============================================================================
+*/
 #include <unistd.h>
 #include <cstdio>
 #include <cstdlib>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/shm.h>
 #include <sys/mman.h>
+#include <sys/wait.h>
+#include <semaphore.h>
 #include <cstring>
-#include <mutex>
 #include <fstream>
 #include <iostream>
 
 using namespace std;
-mutex my_mutex;
-char *buff;
 
+pid_t pid;
+int* N;
+int counter = 0;
+sem_t* semaphore;
 fstream F;
-int semaphore;
+int shared_addr;
+int status = 0;
+int* sig;
+void increment_counter();
+void print_header();
+
+/*
+  MAIN
+*/
 
 int main() {
-  semaphore = shm_open("sema", O_RDWR | O_CREAT, S_IRWXO | S_IRWXG | S_IRWXU);
-  pid_t parent_pid;
-  parent_pid = getpid();
   
-  caddr_t page_address;
+  print_header();
 
-  F.open("fileF", ios::out | ios::trunc);
+  // open shared memory space
+  if ((shared_addr = shm_open("shared_test", O_CREAT | O_RDWR, S_IRWXU)) == -1) {
+    cout << "\nShared filed failed to init" << endl;
+    exit(1);
+  }
+  
+  // open memory space for semaphore
+  if ((semaphore = sem_open("semaphore_test", O_CREAT | O_TRUNC, S_IRWXU, 1)) == SEM_FAILED) {
+    cout << "\nSemaphore failed to init" << endl;
+    exit(1);
+  }
+  
+  // allocate memory to memory space
+  fallocate(shared_addr, 0, 0, 1000);
+  ftruncate(shared_addr, 1000);
+
+  // assign N memory from shared memory space and set to 0
+  N = (int*)mmap(0, sizeof(int), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, shared_addr, 0);      
+  *N = 0;  
+    
+  
+  // open file F and insert 1    
+  F.open("/tmp/fileF", ios::out | ios::trunc);
   F << 1;
   F.close();
 
-  for (int i = 0; i < 3; ++i) {
-    if (fork() == 0) {
-      cout << "\nChild PID: " << getpid() << endl;
-      page_address = (caddr_t)mmap(0, 5000, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, semaphore, 0);
-      break;
+  // create 3 child processes with fork() and start incrementing file
+  for (int i = 0; i < 3; ++i) {    
+    if ((pid = fork()) == 0) {                              
+      increment_counter();
     }
-  }
-  
-  if (getpid() != parent_pid) {
-    int N = 0;
-    while (N < 500) {      
-      if (mlock(page_address, 5000) == 0) {        
-        F.open("fileF", ios::in);
-        F.seekp(0);
-        F >> N;
-        F.close();
-        cout << "\nPID: " << getpid() << ", N: " << N << endl;
-        N++;
-        F.open("fileF", ios::out);
-        F.seekp(0);
-        F << N;
-        F.close();
-        munmap(page_address, 5000);
-      }
-    }
-    exit(0);
-  }
+  }        
+
+  // if parent_process, wait for children to exit, then unlink shared memory
+  if (pid != 0) {    
+    while (wait(&status) > 0);
+    shm_unlink("shared_test");
+    sem_close(semaphore);
+    sem_unlink("semaphore_test");
+  }    
   
   return 0;
+}
+
+
+
+
+// function uses semaphore block access to other process while
+// reading value from file, assigning the value to N, incrementing,
+// and writing the incremented value back to F
+
+void increment_counter() {
+  while (*N < 500) {
+    sem_wait(semaphore);
+    F.open("/tmp/fileF", ios::in);    
+    F >> *N;
+    F.close();    
+    cout << "PID: " << getpid() << ", N: " << *N << endl;    
+    ++(*N);
+    F.open("/tmp/fileF", ios::out | ios::trunc);    
+    F << *N;
+    F.close();    
+    sem_post(semaphore);
+    usleep(1);
+  }
+  exit(0);
+}
+
+
+
+
+
+void print_header()
+{
+  printf("\n\n"
+    "       [37;42m +------------------------------------------------+ [0m\n"
+    "       [37;42m |        Computer Sceince and Engineering        | [0m\n"
+    "       [37;42m |          CSCE 4600 - Operating Systems         | [0m\n"
+    "       [37;42m | Adam Williams arw0174 adamwilliams2@my.unt.edu | [0m\n"
+    "       [37;42m +------------------------------------------------+ [0m\n");
 }
