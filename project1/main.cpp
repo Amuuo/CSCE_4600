@@ -52,8 +52,24 @@ struct Process_List {
   void generate_processes(int);
   void print_processes();
   void print_stats();
+  void sort_by_burst();
+  void sort_by_mem();
 };
 
+
+struct Processors {
+  
+  Processors(){}
+  Processors(int size, float spd) : num_of_processors{size}, 
+                                    speed{spd*1000000000}{}
+
+  vector<Process_List> processor_queues;
+  long long speed;
+  int num_of_processors;
+
+
+
+};
 
 
 
@@ -62,13 +78,22 @@ struct Process_List {
 int main() {
   
   Process_List my_processes;
+  Processors my_processors{5, 4.0};
   my_processes.generate_processes(200);
   my_processes.print_processes();
   my_processes.print_stats();
-  
+  my_processes.sort_by_burst();
+  my_processes.print_processes();
+
+  printf("\nNumber of Processors: %d", my_processors.num_of_processors);
+  printf("\nProcessors speed:     %lld\n\n", my_processors.speed);
 
   return 0;
 }
+
+
+
+
 
 
 
@@ -123,11 +148,38 @@ void Process_List::print_processes() {
   for (auto& process : processes) {
     printf("\n%4d:  Burst: %-15lld Mem: %-15lld", i++, process.burst_time, process.mem_req);    
   }
+  printf("\n\n");
 }
 
 
 void Process_List::print_stats() {
   
-  printf("\n\nBurst Mean: %lld\nBurst Standard Dev: %lld\n", burst_mean, burst_dev);    
-  printf("\nMemory Mean: %lld\nMemory Standard Dev: %lld\n\n", mem_mean, mem_dev);      
+  printf("\n\n");
+  printf("Burst Mean:          %lld\n",   burst_mean);    
+  printf("Burst Standard Dev:  %lld\n\n", burst_dev);
+  printf("Memory Mean:         %lld\n",   mem_mean);      
+  printf("Memory Standard Dev: %lld",     mem_dev);
+  printf("\n\n");
+}
+
+
+
+void Process_List::sort_by_burst() {
+
+  sort(processes.begin(), processes.end(), 
+       [](const Process& p1, const Process& p2){
+         return p1.burst_time > p2.burst_time;
+      }
+  );
+}
+
+
+
+void Process_List::sort_by_mem() {
+
+  sort(processes.begin(), processes.end(), 
+       [](const Process& p1, const Process& p2){
+         return p1.mem_req > p2.mem_req;
+      }
+  );
 }
