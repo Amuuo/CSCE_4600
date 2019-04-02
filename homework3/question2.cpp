@@ -58,22 +58,34 @@ void read_from_file2(){
 
 	string s;
 	{
+		printf("\nThread 2 attempting to acquire lock1");
 		lock_guard<mutex> lck{lock1};
+		printf("\nThread 2 acquired lock1");
 		while(!in->eof()) {
+			printf("\nThread 2 attempting to acquire lock2");
 			lock_guard<mutex> lck2{lock2};
+			printf("\nThread 2 acquired lock2");
 			s.push_back(in->get());
+			printf("\nThread 2 releasing lock2");
 		}
 	}
+	printf("\nThread 2 released lock1");
 }
 
 /* deadlocking function for thread 1 */
 void read_from_file1() { 
 	string s;
 	{
+		printf("\nThread 1 attempting to acquire lock2");
 		lock_guard<mutex>lck{lock2};
+		printf("\nThread 1 acquired lock2");
 		while(!in->eof()) {
+			printf("\nThread 1 attempting to acquire lock1");
 			lock_guard<mutex> lck2{lock1};
+			printf("\nThread 1 acquired lock1");
 			s.push_back(in->get());
+			printf("\nThread 1 releasing lock1");
 		}
 	}
+	printf("\nThead 1 released lock2");
 }
