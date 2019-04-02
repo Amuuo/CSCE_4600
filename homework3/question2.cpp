@@ -30,13 +30,13 @@ int main() {
 
 	string string1(100000000, '1');
 
-	printf("\n>> Writing to file");
+	cout << "\n>> Writing to file" << endl;
 	write_to_file(string1);
-	printf("\n>> Done writing text.txt");
+	cout << ">> Done writing text.txt" << endl;
 	in = new ifstream{"text.txt"};
 
 
-	printf("\n>> Initializing threads");
+	cout << ">> Initializing threads" << endl;
 	thread thread1{read_from_file1};
 	thread thread2{read_from_file2};
 
@@ -61,34 +61,34 @@ void read_from_file2(){
 
 	string s;
 	{
-		printf("\n>> Thread 2 attempting to acquire lock1");
+		cout << ">> Thread 2 attempting to acquire lock1" << endl;
 		lock_guard<mutex> lck{lock1};
-		printf("\n>> Thread 2 acquired lock1");
+		cout << ">> Thread 2 acquired lock1" << endl;
 		while(!in->eof()) {
-			printf("\n>> Thread 2 attempting to acquire lock2");
+			cout << ">> Thread 2 attempting to acquire lock2" << endl;
 			lock_guard<mutex> lck2{lock2};
-			printf("\n>> Thread 2 acquired lock2");
+			cout << ">> Thread 2 acquired lock2" << endl;
 			s.push_back(in->get());
-			printf("\n>> Thread 2 releasing lock2");
+			cout << ">> Thread 2 releasing lock2" << endl;
 		}
 	}
-	printf("\n>> Thread 2 released lock1");
+	cout << ">> Thread 2 released lock1" << endl;
 }
 
 /* deadlocking function for thread 1 */
 void read_from_file1() { 
 	string s;
 	{
-		printf("\n>> Thread 1 attempting to acquire lock2");
+		cout << ">> Thread 1 attempting to acquire lock2" << endl;
 		lock_guard<mutex>lck{lock2};
-		printf("\n>> Thread 1 acquired lock2");
+		cout << ">> Thread 1 acquired lock2" << endl;
 		while(!in->eof()) {
-			printf("\n>> Thread 1 attempting to acquire lock1");
+			cout << ">> Thread 1 attempting to acquire lock1" << endl;
 			lock_guard<mutex> lck2{lock1};
-			printf("\n>> Thread 1 acquired lock1");
+			cout << ">> Thread 1 acquired lock1" << endl;
 			s.push_back(in->get());
-			printf("\n>> Thread 1 releasing lock1");
+			cout << ">> Thread 1 releasing lock1" << endl;
 		}
 	}
-	printf("\n>> Thread 1 released lock2");
+	cout << ">> Thread 1 released lock2" << endl;
 }
