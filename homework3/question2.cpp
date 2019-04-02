@@ -28,7 +28,7 @@ int main() {
 
 	out = new ofstream{"text.txt"};
 
-	string string1(100000000, '1');
+	string string1(10000000, '1');
 
 	cout << "\n>> Writing to file" << endl;
 	write_to_file(string1);
